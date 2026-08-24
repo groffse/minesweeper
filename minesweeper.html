@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin-top: 50px;
+        }
+
+        #game-container {
+            background-color: #c0c0c0;
+            padding: 20px;
+            border-left: 3px solid #ffffff;
+            border-top: 3px solid #ffffff;
+            border-right: 3px solid #808080;
+            border-bottom: 3px solid #808080;
+            display: inline-block;
+        }
+
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #c0c0c0;
+            border-left: 3px solid #808080;
+            border-top: 3px solid #808080;
+            border-right: 3px solid #ffffff;
+            border-bottom: 3px solid #ffffff;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .counter {
+            background-color: black;
+            color: red;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 24px;
+            padding: 5px;
+            width: 50px;
+            text-align: center;
+        }
+
+        #reset-btn {
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            background-color: #c0c0c0;
+            border-left: 3px solid #ffffff;
+            border-top: 3px solid #ffffff;
+            border-right: 3px solid #808080;
+            border-bottom: 3px solid #808080;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #reset-btn:active {
+            border-left: 3px solid #808080;
+            border-top: 3px solid #808080;
+            border-right: 3px solid #ffffff;
+            border-bottom: 3px solid #ffffff;
+        }
+
+        #board {
+            display: grid;
+            border-left: 3px solid #808080;
+            border-top: 3px solid #808080;
+            border-right: 3px solid #ffffff;
+            border-bottom: 3px solid #ffffff;
+            background-color: #c0c0c0;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #c0c0c0;
+            border-left: 2px solid #ffffff;
+            border-top: 2px solid #ffffff;
+            border-right: 2px solid #808080;
+            border-bottom: 2px solid #808080;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .cell.revealed {
+            border: 1px solid #808080;
+            background-color: #c0c0c0;
+            border-left: 1px solid #808080;
+            border-top: 1px solid #808080;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .cell.bomb {
+            background-color: red;
+        }
+
+        /* Number colors */
+        .color-1 { color: blue; }
+        .color-2 { color: green; }
+        .color-3 { color: red; }
+        .color-4 { color: darkblue; }
+        .color-5 { color: darkred; }
+        .color-6 { color: teal; }
+        .color-7 { color: black; }
+        .color-8 { color: gray; }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <label>Difficulty: </label>
+        <select id="difficulty-select">
+            <option value="beginner">Beginner (9x9, 10 bombs)</option>
+            <option value="intermediate">Intermediate (16x16, 40 bombs)</option>
+            <option value="expert">Expert (30x16, 99 bombs)</option>
+        </select>
+        <button id="new-game-btn">New Game</button>
+    </div>
+
+    <br>
+
+    <div id="game-container">
+        <div id="header">
+            <div id="bomb-counter" class="counter">010</div>
+            <div id="reset-btn">🙂</div>
+            <div id="timer" class="counter">000</div>
+        </div>
+        <div id="board" oncontextmenu="return false;">
+            <!-- Cells generated here -->
+        </div>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const bombCounterElement = document.getElementById('bomb-counter');
+        const timerElement = document.getElementById('timer');
+        const resetBtnElement = document.getElementById('reset-btn');
+        const difficultySelect = document.getElementById('difficulty-select');
+        const newGameBtn = document.getElementById('new-game-btn');
+
+        let width = 9;
+        let height = 9;
+        let numBombs = 10;
+
+        let grid = [];
+        let bombsRemaining = 0;
+        let isFirstClick = true;
+        let isGameOver = false;
+        let timer = 0;
+        let timerInterval = null;
+        let revealedCount = 0;
+
+        function init() {
+            setDifficulty();
+            resetGame();
+        }
+
+        function setDifficulty() {
+            const val = difficultySelect.value;
+            if (val === 'beginner') {
+                width = 9; height = 9; numBombs = 10;
+            } else if (val === 'intermediate') {
+                width = 16; height = 16; numBombs = 40;
+            } else if (val === 'expert') {
+                width = 30; height = 16; numBombs = 99;
+            }
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timer = 0;
+            updateTimerDisplay();
+
+            isGameOver = false;
+            isFirstClick = true;
+            revealedCount = 0;
+            bombsRemaining = numBombs;
+            updateBombCounter();
+            resetBtnElement.textContent = '🙂';
+
+            boardElement.style.gridTemplateColumns = `repeat(${width}, 30px)`;
+            boardElement.innerHTML = '';
+            grid = [];
+
+            for (let r = 0; r < height; r++) {
+                let row = [];
+                for (let c = 0; c < width; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.classList.add('cell');
+                    cellEl.dataset.r = r;
+                    cellEl.dataset.c = c;
+
+                    cellEl.addEventListener('mousedown', handleCellClick);
+
+                    boardElement.appendChild(cellEl);
+
+                    row.push({
+                        r: r,
+                        c: c,
+                        isBomb: false,
+                        isRevealed: false,
+                        isFlagged: false,
+                        adjacentBombs: 0,
+                        el: cellEl
+                    });
+                }
+                grid.push(row);
+            }
+        }
+
+        function handleCellClick(e) {
+            if (isGameOver) return;
+
+            const r = parseInt(e.target.dataset.r);
+            const c = parseInt(e.target.dataset.c);
+            const cell = grid[r][c];
+
+            // Right click (flag)
+            if (e.button === 2) {
+                toggleFlag(cell);
+            }
+            // Left click (reveal)
+            else if (e.button === 0) {
+                if (cell.isFlagged) return;
+
+                if (isFirstClick) {
+                    generateBombs(r, c);
+                    isFirstClick = false;
+                    startTimer();
+                }
+
+                if (cell.isBomb) {
+                    gameOver(false, cell);
+                } else {
+                    revealCell(cell);
+                    checkWin();
+                }
+            }
+        }
+
+        function toggleFlag(cell) {
+            if (cell.isRevealed) return;
+
+            if (cell.isFlagged) {
+                cell.isFlagged = false;
+                cell.el.textContent = '';
+                bombsRemaining++;
+            } else {
+                if (bombsRemaining > 0) {
+                    cell.isFlagged = true;
+                    cell.el.textContent = '🚩';
+                    bombsRemaining--;
+                }
+            }
+            updateBombCounter();
+        }
+
+        function generateBombs(safeR, safeC) {
+            let bombsPlaced = 0;
+            while (bombsPlaced < numBombs) {
+                const r = Math.floor(Math.random() * height);
+                const c = Math.floor(Math.random() * width);
+
+                if (!grid[r][c].isBomb && !(r === safeR && c === safeC)) {
+                    grid[r][c].isBomb = true;
+                    bombsPlaced++;
+                }
+            }
+
+            // Calculate adjacent bombs
+            for (let r = 0; r < height; r++) {
+                for (let c = 0; c < width; c++) {
+                    if (!grid[r][c].isBomb) {
+                        grid[r][c].adjacentBombs = countAdjacentBombs(r, c);
+                    }
+                }
+            }
+        }
+
+        function countAdjacentBombs(r, c) {
+            let count = 0;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const nr = r + i;
+                    const nc = c + j;
+                    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                        if (grid[nr][nc].isBomb) count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function revealCell(cell) {
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            cell.isRevealed = true;
+            cell.el.classList.add('revealed');
+            revealedCount++;
+
+            if (cell.adjacentBombs > 0) {
+                cell.el.textContent = cell.adjacentBombs;
+                cell.el.classList.add('color-' + cell.adjacentBombs);
+            } else {
+                // Flood fill
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const nr = cell.r + i;
+                        const nc = cell.c + j;
+                        if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                            revealCell(grid[nr][nc]);
+                        }
+                    }
+                }
+            }
+        }
+
+        function gameOver(win, clickedCell = null) {
+            isGameOver = true;
+            clearInterval(timerInterval);
+
+            if (win) {
+                resetBtnElement.textContent = '😎';
+                bombsRemaining = 0;
+                updateBombCounter();
+                // Flag all remaining unrevealed bombs
+                for (let r = 0; r < height; r++) {
+                    for (let c = 0; c < width; c++) {
+                        if (grid[r][c].isBomb && !grid[r][c].isFlagged) {
+                            grid[r][c].el.textContent = '🚩';
+                        }
+                    }
+                }
+            } else {
+                resetBtnElement.textContent = '😵';
+                // Reveal all bombs
+                for (let r = 0; r < height; r++) {
+                    for (let c = 0; c < width; c++) {
+                        const cell = grid[r][c];
+                        if (cell.isBomb) {
+                            if (!cell.isFlagged) {
+                                cell.el.textContent = '💣';
+                                cell.el.classList.add('revealed');
+                            }
+                        } else if (cell.isFlagged) {
+                            cell.el.textContent = '❌'; // Incorrect flag
+                        }
+                    }
+                }
+                if (clickedCell) {
+                    clickedCell.el.classList.add('bomb'); // Highlight the bomb that caused the loss
+                }
+            }
+        }
+
+        function checkWin() {
+            if (revealedCount === (width * height) - numBombs) {
+                gameOver(true);
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timer < 999) {
+                    timer++;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            timerElement.textContent = timer.toString().padStart(3, '0');
+        }
+
+        function updateBombCounter() {
+            bombCounterElement.textContent = bombsRemaining.toString().padStart(3, '0');
+        }
+
+        newGameBtn.addEventListener('click', init);
+        resetBtnElement.addEventListener('click', resetGame);
+        difficultySelect.addEventListener('change', init);
+
+        // Start initial game
+        init();
+    </script>
+</body>
+</html>
