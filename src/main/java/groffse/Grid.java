@@ -1,7 +1,5 @@
 package groffse;
 
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
