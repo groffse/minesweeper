@@ -20,10 +20,10 @@ public class Panel {
             throw new IllegalStateException("Panel is flagged and cannot be revealed!");
         isRevealed = true;
     }
-    public void setFlag() {
+    public void setFlag(boolean f) {
         if(isRevealed)
             throw new IllegalStateException("Panel is already revealed. A flag cannot be set!");
-        isFlagged = true;
+        isFlagged = f;
     }
     public int getAdjacentBombs () {return adjacentBombs;}
     public void setAdjacentBombs(int adjacentBombs) {this.adjacentBombs = adjacentBombs;}

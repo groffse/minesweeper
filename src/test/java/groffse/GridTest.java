@@ -117,14 +117,14 @@ public class GridTest {
         grid.setNumberOfBombs(0);
         grid.generateBoard(-1);
 
-        grid.getPanelGrid().get(0).get(0).setFlag();
-        grid.getPanelGrid().get(0).get(1).setFlag();
-        grid.getPanelGrid().get(0).get(2).setFlag();
-        grid.getPanelGrid().get(1).get(0).setFlag();
-        grid.getPanelGrid().get(1).get(2).setFlag();
-        grid.getPanelGrid().get(2).get(0).setFlag();
-        grid.getPanelGrid().get(2).get(1).setFlag();
-        grid.getPanelGrid().get(2).get(2).setFlag();
+        grid.getPanelGrid().get(0).get(0).setFlag(true);
+        grid.getPanelGrid().get(0).get(1).setFlag(true);
+        grid.getPanelGrid().get(0).get(2).setFlag(true);
+        grid.getPanelGrid().get(1).get(0).setFlag(true);
+        grid.getPanelGrid().get(2).get(0).setFlag(true);
+        grid.getPanelGrid().get(2).get(1).setFlag(true);
+        grid.getPanelGrid().get(1).get(2).setFlag(true);
+        grid.getPanelGrid().get(2).get(2).setFlag(true);
 
         assertEquals(8, grid.getFlagsAdjacentToPanel(1,1));
     }

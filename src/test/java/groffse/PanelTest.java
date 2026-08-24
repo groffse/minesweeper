@@ -53,7 +53,7 @@ public class PanelTest {
         panel.reveal();
         IllegalStateException thrown =
                 assertThrows(IllegalStateException.class,
-                        ()->panel.setFlag(),
+                        ()->panel.setFlag(true),
                         "Panel is already revealed and setFlag() should throw but did not!");
         assertTrue(thrown.getMessage().contains("Panel is already revealed. A flag cannot be set!"));
     }
@@ -61,7 +61,7 @@ public class PanelTest {
     // TEst that an exception is thrown when reveal() is invoken when isFlagged is true
     @Test
     public void testExceptionWhenRevealWithIsFlaggedTrue() {
-        panel.setFlag();
+        panel.setFlag(true);
         IllegalStateException thrown =
                 assertThrows(IllegalStateException.class,
                         ()->panel.reveal(),
